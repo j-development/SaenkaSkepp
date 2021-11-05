@@ -16,11 +16,13 @@ public class Main {
 
         Map<String, Integer> ships = new HashMap<>();
         // Carrier = 5 Slots
-        ships.put("Carrier", 0);
+        ships.put("Carrier", 1);
         // Battleship = 4 Slots
         ships.put("Battleship", 1);
         // Cruiser = 3 Slots
         ships.put("Cruiser", 1);
+        // Submarine = 3 Slots
+        ships.put("Submarine", 1);
         // Destroyer = 2 Slots
         ships.put("Destroyer", 1);
 
@@ -33,7 +35,7 @@ public class Main {
         String[][] matrixB_private = placeOnMatrixAuto(matrixSize, ships, fill, ship, scan);
 
 
-        System.out.println("Done");
+        System.out.println("Deployment Done");
 
 
         while(gameOn){
@@ -302,7 +304,7 @@ public class Main {
                 }
                 length = 4;
             }
-            case "Cruiser" -> {
+            case "Cruiser", "Submarine" -> {
                 if (direction == 1) {
                     rowMax -= 2;
                 } else {
