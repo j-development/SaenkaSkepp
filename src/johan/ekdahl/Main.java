@@ -14,7 +14,6 @@ public class Main {
         String miss = "O";
         String ship = "S";
 
-
         Map<String, Integer> ships = new HashMap<>();
         // Carrier = 5 Slots
         ships.put("Carrier", 0);
@@ -180,24 +179,33 @@ public class Main {
     }
 
     private static void printMatrix(String[][] matrixA, String[][] matrixB, int matrixSize) {
-        //Print Matrix, boring, 10 looks a bit off because of two-digit-width
         //Always prints two Matrixs side by side
-        System.out.print("A ");
+        System.out.print(" A ");
         for (int i = 0; i < matrixSize; i++){
             System.out.print(i + 1 + " ");
         }
-        System.out.print("   B ");
+        System.out.print("    B ");
         for (int i = 0; i < matrixSize; i++){
             System.out.print(i + 1 + " ");
         }
         System.out.println();
         for(int row = 0; row < matrixSize; row++){
-            System.out.print(row + 1 + " ");
+            if(row+1>9){
+                System.out.print((row + 1) + " ");
+            }
+            else{
+                System.out.print(" " + (row + 1) + " ");
+            }
             for (int col = 0; col < matrixSize; col++){
                 System.out.print(matrixA[row][col] + " ");
             }
             System.out.print("    ");
-            System.out.print(row + 1 + " ");
+            if(row+1>9){
+                System.out.print((row + 1) + " ");
+            }
+            else{
+                System.out.print(" " + (row + 1) + " ");
+            }
             for (int col = 0; col < matrixSize; col++){
                 System.out.print(matrixB[row][col] + " ");
             }
