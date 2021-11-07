@@ -26,6 +26,8 @@ public class Main {
         // Destroyer = 2 Slots
         ships.put("Destroyer", 1);
 
+
+
         //Init Create  Player A  Human player
         String[][] matrixA_public = fillMatrix(matrixSize,fill);
         String[][] matrixA_private = placeOnMatrix(matrixSize, ships, fill, ship, scan);
@@ -170,7 +172,8 @@ public class Main {
 
                 for(int i = 0; i < numberOfShips; i++) {
                     System.out.println("Player B placing: " + set.getKey() + " " +  (numberOfShips-i));
-                    generatePlacement(matrix, set.getKey(), new Random().nextInt(2), matrixSize, ship, fill, scan, true);
+
+                    generatePlacement(matrix, set.getKey(), new Random().nextInt(2) == 1 ? 'V' : 'H', matrixSize, ship, fill, scan, true);
 
                 }
             }
@@ -230,9 +233,8 @@ public class Main {
         String[][] matrix = fillMatrix(matrixSize,fill);
         String[][] sampleB = fillMatrix(matrixSize,fill);
 
-        //Probably don't need two variables for direction, but for now I have two
-        String dir;
-        int direction;
+        char direction;
+
 
         // Variable for ships, only to reduce calls to set.getValue, maybe unnecessary
         int numberOfShips;
@@ -249,21 +251,11 @@ public class Main {
                     System.out.println(set.getKey() + " " +  (numberOfShips-i));
 
                     //Getting direction and reject faulty input
-                    //Vertical Direction = V = 1
-                    //Horizontal Direction = H = 0
-                    while(true) {
+
+                    do {
                         System.out.println("Choose Direction; Horizontal = H and Vertical = V: ");
-                        dir = scan.nextLine().toUpperCase();
-                        if(dir.equals("H") || dir.equals("V")) {
-                            if(dir.equals("V")){
-                                direction = 1;
-                            }
-                            else {
-                                direction = 0;
-                            }
-                            break;
-                        }
-                    }
+                        direction = Character.toUpperCase(scan.next().charAt(0));
+                    } while (direction != 'H' && direction != 'V');
                     generatePlacement(matrix, set.getKey(), direction, matrixSize, ship, fill, scan, false);
 
                 }
@@ -274,22 +266,24 @@ public class Main {
             return matrix;
         }
 
-    private static void generatePlacement(String[][] matrix, String shipType, int direction, int matrixSize, String ship, String fill, Scanner scan, boolean auto) {
+    private static void generatePlacement(String[][] matrix, String shipType, char direction, int matrixSize, String ship, String fill, Scanner scan, boolean auto) {
 
         //Variables for coordinates and placement
-        int[] possiblePlacement = new int[4];
         int row = Integer.MIN_VALUE;
         int col = Integer.MIN_VALUE;
         int length = 0;
         int rowMax = matrixSize;
         int colMax = matrixSize;
         boolean gotCaught = true;
+        Coordinates coordinates = new Coordinates();
+
+
 
         // Get constraints on coordinates, we don't want any array out of bounds on our Matrix
         // Also get the length of our ships and store it in length variable
         switch (shipType) {
             case "Carrier" -> {
-                if (direction == 1) {
+                if (direction == 'V') {
                     rowMax -= 4;
                 } else {
                     colMax -= 4;
@@ -297,7 +291,7 @@ public class Main {
                 length = 5;
             }
             case "Battleship" -> {
-                if (direction == 1) {
+                if (direction == 'V') {
                     rowMax -= 3;
                 } else {
                     colMax -= 3;
@@ -305,7 +299,7 @@ public class Main {
                 length = 4;
             }
             case "Cruiser", "Submarine" -> {
-                if (direction == 1) {
+                if (direction == 'V') {
                     rowMax -= 2;
                 } else {
                     colMax -= 2;
@@ -313,7 +307,7 @@ public class Main {
                 length = 3;
             }
             case "Destroyer" -> {
-                if (direction == 1) {
+                if (direction == 'V') {
                     rowMax -= 1;
                 } else {
                     colMax -= 1;
@@ -323,8 +317,8 @@ public class Main {
         }
         //Generate coordinates for placement, if auto is true(for Player B), randomize coordinates
         if(auto){
-            possiblePlacement[0] = new Random().nextInt(rowMax);
-            possiblePlacement[1] = new Random().nextInt(colMax);
+            coordinates.setRow(new Random().nextInt(rowMax));
+            coordinates.setCol(new Random().nextInt(colMax));
         }
         else{
             do {
@@ -355,29 +349,30 @@ public class Main {
                 }
             } while (gotCaught);
 
-            possiblePlacement[0] = row-1;
-            possiblePlacement[1] = col-1;
+            coordinates.setRow(row-1);
+            coordinates.setCol(col-1);
         }
-        possiblePlacement[2] = direction;
-        possiblePlacement[3] = length;
+        coordinates.setDirection(direction);
+        coordinates.setLength(length);
+
 
 
         // Evaluate if placement makes the ships overlap, display message if Human Player(Player A) overlaps
         // If overlapping occur, call function generatePlacement again and get new coordinates/placement
         // If the placement is possible, update The Matrix
-        if(!tryPossiblePlacement(matrix,possiblePlacement,fill)){
+        if(!tryPossiblePlacement(matrix, fill, coordinates)){
             if(!auto) {
                 System.out.println("Overlapping ships! Try again mister");
             }
             generatePlacement(matrix, shipType, direction, matrixSize, ship , fill, scan, auto);
         }
         else{
-            for(int i = 0; i < possiblePlacement[3]; i++){
-                if(possiblePlacement[2] == 1){
-                    matrix[possiblePlacement[0]+i][possiblePlacement[1]] = ship;
+            for(int i = 0; i < coordinates.getLength(); i++){
+                if(coordinates.getDirection() == 'V'){
+                    matrix[coordinates.getRow()+i][coordinates.getCol()] = ship;
                 }
                 else {
-                    matrix[possiblePlacement[0]][possiblePlacement[1]+i] = ship;
+                    matrix[coordinates.getRow()][coordinates.getCol()+i] = ship;
                 }
             }
         }
@@ -387,17 +382,17 @@ public class Main {
 
     // Function for evaluating possible placement, loops through the matrix and if any slots is occupied with something other than fill(water)
     // it will return false
-    private static boolean tryPossiblePlacement(String[][] matrix, int[] possiblePlacement, String fill) {
+    private static boolean tryPossiblePlacement(String[][] matrix, String fill, Coordinates coordinates) {
         int collisionCounter = 0;
 
-        for(int i = 0; i < possiblePlacement[3]; i++) {
-            if(possiblePlacement[2] == 1){
-                if(!Objects.equals(matrix[possiblePlacement[0] + i][possiblePlacement[1]], fill)){
+        for(int i = 0; i < coordinates.getLength(); i++) {
+            if(coordinates.getDirection() == 'V'){
+                if(!Objects.equals(matrix[coordinates.getRow() + i][coordinates.getCol()], fill)){
                     collisionCounter += 1;
                 }
             }
             else {
-                if(!Objects.equals(matrix[possiblePlacement[0]][possiblePlacement[1]+i], fill)){
+                if(!Objects.equals(matrix[coordinates.getRow()][coordinates.getCol()+i], fill)){
                     collisionCounter += 1;
                 }
             }
