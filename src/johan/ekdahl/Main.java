@@ -172,8 +172,8 @@ public class Main {
 
                 for(int i = 0; i < numberOfShips; i++) {
                     System.out.println("Player B placing: " + set.getKey() + " " +  (numberOfShips-i));
-
-                    generatePlacement(matrix, set.getKey(), new Random().nextInt(2) == 1 ? 'V' : 'H', matrixSize, ship, fill, scan, true);
+                    Ships battleship = new Ships(set.getKey(), new Random().nextInt(2) == 1 ? 'V' : 'H');
+                    generatePlacement(matrix, battleship, matrixSize, ship, fill, scan, true);
 
                 }
             }
@@ -232,9 +232,7 @@ public class Main {
         // Two Matrixs filled with fill/water
         String[][] matrix = fillMatrix(matrixSize,fill);
         String[][] sampleB = fillMatrix(matrixSize,fill);
-
         char direction;
-
 
         // Variable for ships, only to reduce calls to set.getValue, maybe unnecessary
         int numberOfShips;
@@ -256,7 +254,9 @@ public class Main {
                         System.out.println("Choose Direction; Horizontal = H and Vertical = V: ");
                         direction = Character.toUpperCase(scan.next().charAt(0));
                     } while (direction != 'H' && direction != 'V');
-                    generatePlacement(matrix, set.getKey(), direction, matrixSize, ship, fill, scan, false);
+                    Ships battleship = new Ships(set.getKey(), direction);
+
+                    generatePlacement(matrix, battleship, matrixSize, ship, fill, scan, false);
 
                 }
                 }
@@ -266,55 +266,25 @@ public class Main {
             return matrix;
         }
 
-    private static void generatePlacement(String[][] matrix, String shipType, char direction, int matrixSize, String ship, String fill, Scanner scan, boolean auto) {
+    private static void generatePlacement(String[][] matrix, Ships battleship, int matrixSize, String ship, String fill, Scanner scan, boolean auto) {
 
         //Variables for coordinates and placement
         int row = Integer.MIN_VALUE;
         int col = Integer.MIN_VALUE;
-        int length = 0;
         int rowMax = matrixSize;
         int colMax = matrixSize;
         boolean gotCaught = true;
         Coordinates coordinates = new Coordinates();
 
-
-
-        // Get constraints on coordinates, we don't want any array out of bounds on our Matrix
-        // Also get the length of our ships and store it in length variable
-        switch (shipType) {
-            case "Carrier" -> {
-                if (direction == 'V') {
-                    rowMax -= 4;
-                } else {
-                    colMax -= 4;
-                }
-                length = 5;
-            }
-            case "Battleship" -> {
-                if (direction == 'V') {
-                    rowMax -= 3;
-                } else {
-                    colMax -= 3;
-                }
-                length = 4;
-            }
-            case "Cruiser", "Submarine" -> {
-                if (direction == 'V') {
-                    rowMax -= 2;
-                } else {
-                    colMax -= 2;
-                }
-                length = 3;
-            }
-            case "Destroyer" -> {
-                if (direction == 'V') {
-                    rowMax -= 1;
-                } else {
-                    colMax -= 1;
-                }
-                length = 2;
-            }
+        if(battleship.getDirection() == 'V'){
+            rowMax -= battleship.getLength()-1;
         }
+        else{
+            colMax -= battleship.getLength()-1;
+        }
+
+
+
         //Generate coordinates for placement, if auto is true(for Player B), randomize coordinates
         if(auto){
             coordinates.setRow(new Random().nextInt(rowMax));
@@ -352,8 +322,8 @@ public class Main {
             coordinates.setRow(row-1);
             coordinates.setCol(col-1);
         }
-        coordinates.setDirection(direction);
-        coordinates.setLength(length);
+        coordinates.setDirection(battleship.getDirection());
+        coordinates.setLength(battleship.getLength());
 
 
 
@@ -364,7 +334,7 @@ public class Main {
             if(!auto) {
                 System.out.println("Overlapping ships! Try again mister");
             }
-            generatePlacement(matrix, shipType, direction, matrixSize, ship , fill, scan, auto);
+            generatePlacement(matrix, battleship, matrixSize, ship , fill, scan, auto);
         }
         else{
             for(int i = 0; i < coordinates.getLength(); i++){
