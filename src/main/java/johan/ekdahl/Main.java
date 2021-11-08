@@ -9,12 +9,12 @@ public class Main {
         Scanner scan = new Scanner(System.in);
         boolean gameOn = true;
         int matrixSize = 10;
-        String fill = "-";
-        String hit = "X";
-        String miss = "O";
-        String ship = "S";
+        FieldSymbols symbols = new FieldSymbols();
 
+        //Ship-type and number of ships store in HashMap
         Map<String, Integer> ships = new HashMap<>();
+
+
         // Carrier = 5 Slots
         ships.put("Carrier", 1);
         // Battleship = 4 Slots
@@ -29,12 +29,12 @@ public class Main {
 
 
         //Init Create  Player A  Human player
-        String[][] matrixA_public = fillMatrix(matrixSize,fill);
-        String[][] matrixA_private = placeOnMatrix(matrixSize, ships, fill, ship, scan);
+        String[][] matrixA_public = fillMatrix(matrixSize,symbols);
+        String[][] matrixA_private = placeOnMatrix(matrixSize, ships, symbols, scan);
 
         //Init Create  Player B  Bot player
-        String[][] matrixB_public = fillMatrix(matrixSize,fill);
-        String[][] matrixB_private = placeOnMatrixAuto(matrixSize, ships, fill, ship, scan);
+        String[][] matrixB_public = fillMatrix(matrixSize,symbols);
+        String[][] matrixB_private = placeOnMatrixAuto(matrixSize, ships, symbols, scan);
 
 
         System.out.println("Deployment Done");
@@ -44,36 +44,36 @@ public class Main {
             //Player A and Player B print
             printMatrix(matrixA_private, matrixB_public, matrixSize);
             //Player A Shoots
-            gameOn = playerAShoots(matrixB_private, matrixB_public, hit, miss, ship, matrixSize, scan, gameOn);
+            gameOn = playerAShoots(matrixB_private, matrixB_public, symbols, matrixSize, scan, gameOn);
             //Player B Shoots
-            gameOn = playerBShoots(matrixA_private, matrixA_public, hit, miss, ship, matrixSize, gameOn);
+            gameOn = playerBShoots(matrixA_private, matrixA_public, symbols, matrixSize, gameOn);
         }
 
 
     }
 
-    private static boolean playerBShoots(String[][] matrixA_private, String[][] matrixA_public, String hit, String miss, String ship, int matrixSize, boolean gameOn) {
+    private static boolean playerBShoots(String[][] matrixA_private, String[][] matrixA_public, FieldSymbols symbols, int matrixSize, boolean gameOn) {
         int[] coordinates = new int[]{Integer.MIN_VALUE,Integer.MIN_VALUE};
         // Getting coordinates for our computer player(Player B)
         // Keep rolling coordinates as long as we keep getting coordinates we have already shot
         do {
             coordinates[0] = new Random().nextInt(10);
             coordinates[1] = new Random().nextInt(10);
-        } while (Objects.equals(matrixA_private[coordinates[0]][coordinates[1]], miss) || Objects.equals(matrixA_private[coordinates[0]][coordinates[1]], hit));
+        } while (Objects.equals(matrixA_private[coordinates[0]][coordinates[1]], symbols.miss) || Objects.equals(matrixA_private[coordinates[0]][coordinates[1]], symbols.hit));
 
         //Announce if coordinates hits or misses target in the Player A's Matrix
-        if(Objects.equals(matrixA_private[coordinates[0]][coordinates[1]], ship)){
+        if(Objects.equals(matrixA_private[coordinates[0]][coordinates[1]], symbols.ship)){
             System.out.println("Player B Hit!");
-            matrixA_private[coordinates[0]][coordinates[1]] = hit;
-            matrixA_public[coordinates[0]][coordinates[1]] = hit;
+            matrixA_private[coordinates[0]][coordinates[1]] = symbols.hit;
+            matrixA_public[coordinates[0]][coordinates[1]] = symbols.hit;
         }
         else{
             System.out.println("Player B Missed!");
-            matrixA_private[coordinates[0]][coordinates[1]] = miss;
-            matrixA_public[coordinates[0]][coordinates[1]] = miss;
+            matrixA_private[coordinates[0]][coordinates[1]] = symbols.miss;
+            matrixA_public[coordinates[0]][coordinates[1]] = symbols.miss;
         }
         //Always check after shots fired, if player has won
-        if(checkIfAnyPlayerWon(matrixA_private, ship, matrixSize)){
+        if(checkIfAnyPlayerWon(matrixA_private, symbols.ship, matrixSize)){
             System.out.println("Player B Have Won, Congratulations!");
             gameOn = false;
         }
@@ -81,7 +81,7 @@ public class Main {
 
     }
 
-    private static boolean playerAShoots(String[][] matrixB_private, String[][] matrixB_public, String hit, String miss, String ship, int matrixSize, Scanner scan, boolean gameOn) {
+    private static boolean playerAShoots(String[][] matrixB_private, String[][] matrixB_public, FieldSymbols symbols, int matrixSize, Scanner scan, boolean gameOn) {
         int[] coordinates = new int[]{Integer.MIN_VALUE,Integer.MIN_VALUE};
         boolean gotCaught = true;
 
@@ -120,22 +120,22 @@ public class Main {
             } while (coordinates[1] > matrixSize || coordinates[1] < 1 && gotCaught);
             coordinates[0] -= 1;
             coordinates[1] -= 1;
-        } while (Objects.equals(matrixB_public[coordinates[0]][coordinates[1]], miss) || Objects.equals(matrixB_public[coordinates[0]][coordinates[1]], hit));
+        } while (Objects.equals(matrixB_public[coordinates[0]][coordinates[1]], symbols.miss) || Objects.equals(matrixB_public[coordinates[0]][coordinates[1]], symbols.hit));
 
 
         //Announce if coordinates hits or misses target in the Matrix
-        if(Objects.equals(matrixB_private[coordinates[0]][coordinates[1]], ship)){
+        if(Objects.equals(matrixB_private[coordinates[0]][coordinates[1]], symbols.ship)){
             System.out.println("Direct Hit!");
-            matrixB_private[coordinates[0]][coordinates[1]] = hit;
-            matrixB_public[coordinates[0]][coordinates[1]] = hit;
+            matrixB_private[coordinates[0]][coordinates[1]] = symbols.hit;
+            matrixB_public[coordinates[0]][coordinates[1]] = symbols.hit;
         }
         else{
             System.out.println("You Missed!");
-            matrixB_private[coordinates[0]][coordinates[1]] = miss;
-            matrixB_public[coordinates[0]][coordinates[1]] = miss;
+            matrixB_private[coordinates[0]][coordinates[1]] = symbols.miss;
+            matrixB_public[coordinates[0]][coordinates[1]] = symbols.miss;
         }
         //Always check after shots fired, if player has won
-        if(checkIfAnyPlayerWon(matrixB_private, ship, matrixSize)){
+        if(checkIfAnyPlayerWon(matrixB_private, symbols.ship, matrixSize)){
             System.out.println("Player A Have Won, Congratulations!");
             gameOn = false;
         }
@@ -155,11 +155,11 @@ public class Main {
 
     }
 
-    private static String[][] placeOnMatrixAuto(int matrixSize, Map<String, Integer> ships, String fill, String ship, Scanner scan) {
+    private static String[][] placeOnMatrixAuto(int matrixSize, Map<String, Integer> ships, FieldSymbols symbols, Scanner scan) {
         //Pretty much the same as placeOnMatrix but with auto-placement for our computer player(Player B)
 
         //Matrix Variable filled with fill/water
-        String[][] matrix = fillMatrix(matrixSize,fill);
+        String[][] matrix = fillMatrix(matrixSize,symbols);
 
 
         int numberOfShips;
@@ -173,7 +173,7 @@ public class Main {
                 for(int i = 0; i < numberOfShips; i++) {
                     System.out.println("Player B placing: " + set.getKey() + " " +  (numberOfShips-i));
                     Ships battleship = new Ships(set.getKey(), new Random().nextInt(2) == 1 ? 'V' : 'H');
-                    generatePlacement(matrix, battleship, matrixSize, ship, fill, scan, true);
+                    generatePlacement(matrix, battleship, matrixSize, symbols, scan, true);
 
                 }
             }
@@ -218,20 +218,21 @@ public class Main {
         }
     }
 
-    private static String[][] fillMatrix(int matrixSize, String fill) {
+    private static String[][] fillMatrix(int matrixSize, FieldSymbols symbols) {
+
         String[][] matrix = new String[matrixSize][matrixSize];
         for(int i = 0; i < matrixSize; i++){
             for(int j = 0; j < matrixSize; j++){
-                matrix[i][j] = fill;
+                matrix[i][j] = symbols.fill;
             }
         }
         return matrix;
     }
 
-    private static String[][] placeOnMatrix(int matrixSize, Map ships, String fill, String ship, Scanner scan) {
+    private static String[][] placeOnMatrix(int matrixSize, Map ships, FieldSymbols symbols, Scanner scan) {
         // Two Matrixs filled with fill/water
-        String[][] matrix = fillMatrix(matrixSize,fill);
-        String[][] sampleB = fillMatrix(matrixSize,fill);
+        String[][] matrix = fillMatrix(matrixSize,symbols);
+        String[][] sampleB = fillMatrix(matrixSize,symbols);
         char direction;
 
         // Variable for ships, only to reduce calls to set.getValue, maybe unnecessary
@@ -256,7 +257,7 @@ public class Main {
                     } while (direction != 'H' && direction != 'V');
                     Ships battleship = new Ships(set.getKey(), direction);
 
-                    generatePlacement(matrix, battleship, matrixSize, ship, fill, scan, false);
+                    generatePlacement(matrix, battleship, matrixSize, symbols, scan, false);
 
                 }
                 }
@@ -266,7 +267,7 @@ public class Main {
             return matrix;
         }
 
-    private static void generatePlacement(String[][] matrix, Ships battleship, int matrixSize, String ship, String fill, Scanner scan, boolean auto) {
+    private static void generatePlacement(String[][] matrix, Ships battleship, int matrixSize, FieldSymbols symbols, Scanner scan, boolean auto) {
 
         //Variables for coordinates and placement
         int row = Integer.MIN_VALUE;
@@ -330,19 +331,19 @@ public class Main {
         // Evaluate if placement makes the ships overlap, display message if Human Player(Player A) overlaps
         // If overlapping occur, call function generatePlacement again and get new coordinates/placement
         // If the placement is possible, update The Matrix
-        if(!tryPossiblePlacement(matrix, fill, coordinates)){
+        if(!tryPossiblePlacement(matrix, symbols.fill, coordinates)){
             if(!auto) {
                 System.out.println("Overlapping ships! Try again mister");
             }
-            generatePlacement(matrix, battleship, matrixSize, ship , fill, scan, auto);
+            generatePlacement(matrix, battleship, matrixSize, symbols, scan, auto);
         }
         else{
             for(int i = 0; i < coordinates.getLength(); i++){
                 if(coordinates.getDirection() == 'V'){
-                    matrix[coordinates.getRow()+i][coordinates.getCol()] = ship;
+                    matrix[coordinates.getRow()+i][coordinates.getCol()] = symbols.ship;
                 }
                 else {
-                    matrix[coordinates.getRow()][coordinates.getCol()+i] = ship;
+                    matrix[coordinates.getRow()][coordinates.getCol()+i] = symbols.ship;
                 }
             }
         }
