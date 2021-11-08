@@ -27,14 +27,13 @@ public class Main {
         ships.put("Destroyer", 1);
 
 
-
         //Init Create  Player A  Human player
         String[][] matrixA_public = fillMatrix(matrixSize,symbols);
         String[][] matrixA_private = placeOnMatrix(matrixSize, ships, symbols, scan);
 
         //Init Create  Player B  Bot player
         String[][] matrixB_public = fillMatrix(matrixSize,symbols);
-        String[][] matrixB_private = placeOnMatrixAuto(matrixSize, ships, symbols, scan);
+        String[][] matrixB_private = placeOnMatrixAuto(matrixSize, ships, symbols);
 
 
         System.out.println("Deployment Done");
@@ -53,27 +52,25 @@ public class Main {
     }
 
     private static boolean playerBShoots(String[][] matrixA_private, String[][] matrixA_public, FieldSymbols symbols, int matrixSize, boolean gameOn) {
-        int[] coordinates = new int[]{Integer.MIN_VALUE,Integer.MIN_VALUE};
+        Coordinates coordinates = new Coordinates();
         // Getting coordinates for our computer player(Player B)
         // Keep rolling coordinates as long as we keep getting coordinates we have already shot
         do {
-            coordinates[0] = new Random().nextInt(10);
-            coordinates[1] = new Random().nextInt(10);
-        } while (Objects.equals(matrixA_private[coordinates[0]][coordinates[1]], symbols.miss) || Objects.equals(matrixA_private[coordinates[0]][coordinates[1]], symbols.hit));
+            coordinates.setRow(new Random().nextInt(10));
+            coordinates.setCol(new Random().nextInt(10));
+        } while (Objects.equals(matrixA_private[coordinates.getRow()][coordinates.getCol()], symbols.miss) || Objects.equals(matrixA_private[coordinates.getRow()][coordinates.getCol()], symbols.hit));
 
         //Announce if coordinates hits or misses target in the Player A's Matrix
-        if(Objects.equals(matrixA_private[coordinates[0]][coordinates[1]], symbols.ship)){
+        if(Objects.equals(matrixA_private[coordinates.getRow()][coordinates.getCol()], symbols.ship)){
             System.out.println("Player B Hit!");
-            matrixA_private[coordinates[0]][coordinates[1]] = symbols.hit;
-            matrixA_public[coordinates[0]][coordinates[1]] = symbols.hit;
+            matrixA_public[coordinates.getRow()][coordinates.getCol()] = matrixA_private[coordinates.getRow()][coordinates.getCol()] = symbols.hit;
         }
         else{
             System.out.println("Player B Missed!");
-            matrixA_private[coordinates[0]][coordinates[1]] = symbols.miss;
-            matrixA_public[coordinates[0]][coordinates[1]] = symbols.miss;
+            matrixA_public[coordinates.getRow()][coordinates.getCol()] = matrixA_private[coordinates.getRow()][coordinates.getCol()] = symbols.miss;
         }
         //Always check after shots fired, if player has won
-        if(checkIfAnyPlayerWon(matrixA_private, symbols.ship, matrixSize)){
+        if(checkIfAnyPlayerWon(matrixA_private, symbols, matrixSize)){
             System.out.println("Player B Have Won, Congratulations!");
             gameOn = false;
         }
@@ -82,71 +79,69 @@ public class Main {
     }
 
     private static boolean playerAShoots(String[][] matrixB_private, String[][] matrixB_public, FieldSymbols symbols, int matrixSize, Scanner scan, boolean gameOn) {
-        int[] coordinates = new int[]{Integer.MIN_VALUE,Integer.MIN_VALUE};
         boolean gotCaught = true;
+        Coordinates coordinates = new Coordinates();
 
-
+        coordinates.setRow(Integer.MIN_VALUE);
+        coordinates.setCol(Integer.MIN_VALUE);
         System.out.println("Time To Fire, Give Me Your Coordinates Captain!");
 
         // Getting coordinates for Human player(Player A)
         // Keep asking for coordinates as long as user keep giving coordinates we have already shot
         // Also check for valid integer inputs
         do {
-            if(coordinates[0] != Integer.MIN_VALUE){
+            if(coordinates.getRow() != Integer.MIN_VALUE){
                 System.out.println("Sorry, Invalid Coordinates, Please Try Again!");
             }
             do {
                 System.out.println("Choose Row: ");
                 if(scan.hasNextInt()){
-                    coordinates[0] = scan.nextInt();
+                    coordinates.setRow(scan.nextInt()-1);
                     gotCaught = false;
                 }
                 else{
                     scan.nextLine();
                     System.out.println("Enter a valid Integer value");
                 }
-            } while (coordinates[0] > matrixSize || coordinates[0] < 1 && gotCaught);
+            } while (coordinates.getRow() > matrixSize || coordinates.getRow() < 1 && gotCaught);
             gotCaught = true;
             do {
                 System.out.println("Choose Col: ");
                 if(scan.hasNextInt()){
-                    coordinates[1] = scan.nextInt();
+                    coordinates.setCol(scan.nextInt()-1);
                     gotCaught = false;
                 }
                 else{
                     scan.nextLine();
                     System.out.println("Enter a valid Integer value");
                 }
-            } while (coordinates[1] > matrixSize || coordinates[1] < 1 && gotCaught);
-            coordinates[0] -= 1;
-            coordinates[1] -= 1;
-        } while (Objects.equals(matrixB_public[coordinates[0]][coordinates[1]], symbols.miss) || Objects.equals(matrixB_public[coordinates[0]][coordinates[1]], symbols.hit));
+            } while (coordinates.getCol() > matrixSize || coordinates.getCol() < 1 && gotCaught);
+
+        } while (Objects.equals(matrixB_public[coordinates.getRow()][coordinates.getCol()], symbols.miss) || Objects.equals(matrixB_public[coordinates.getRow()][coordinates.getCol()], symbols.hit));
 
 
         //Announce if coordinates hits or misses target in the Matrix
-        if(Objects.equals(matrixB_private[coordinates[0]][coordinates[1]], symbols.ship)){
+        if(Objects.equals(matrixB_private[coordinates.getRow()][coordinates.getCol()], symbols.ship)){
             System.out.println("Direct Hit!");
-            matrixB_private[coordinates[0]][coordinates[1]] = symbols.hit;
-            matrixB_public[coordinates[0]][coordinates[1]] = symbols.hit;
+            matrixB_public[coordinates.getRow()][coordinates.getCol()] = matrixB_private[coordinates.getRow()][coordinates.getCol()] = symbols.hit;
         }
         else{
             System.out.println("You Missed!");
-            matrixB_private[coordinates[0]][coordinates[1]] = symbols.miss;
-            matrixB_public[coordinates[0]][coordinates[1]] = symbols.miss;
+            matrixB_public[coordinates.getRow()][coordinates.getCol()] = matrixB_private[coordinates.getRow()][coordinates.getCol()] = symbols.miss;
         }
         //Always check after shots fired, if player has won
-        if(checkIfAnyPlayerWon(matrixB_private, symbols.ship, matrixSize)){
+        if(checkIfAnyPlayerWon(matrixB_private, symbols, matrixSize)){
             System.out.println("Player A Have Won, Congratulations!");
             gameOn = false;
         }
             return gameOn;
     }
 
-    private static boolean checkIfAnyPlayerWon(String[][] matrix, String ship, int matrixSize) {
+    private static boolean checkIfAnyPlayerWon(String[][] matrix, FieldSymbols symbols, int matrixSize) {
         int shipCounter = 0;
         for (int i = 0; i < matrixSize; i++){
             for (int j = 0; j < matrixSize; j++){
-                if(Objects.equals(matrix[i][j], ship)){
+                if(Objects.equals(matrix[i][j], symbols.ship)){
                     shipCounter += 1;
                 }
             }
@@ -155,7 +150,7 @@ public class Main {
 
     }
 
-    private static String[][] placeOnMatrixAuto(int matrixSize, Map<String, Integer> ships, FieldSymbols symbols, Scanner scan) {
+    private static String[][] placeOnMatrixAuto(int matrixSize, Map<String, Integer> ships, FieldSymbols symbols) {
         //Pretty much the same as placeOnMatrix but with auto-placement for our computer player(Player B)
 
         //Matrix Variable filled with fill/water
@@ -173,7 +168,7 @@ public class Main {
                 for(int i = 0; i < numberOfShips; i++) {
                     System.out.println("Player B placing: " + set.getKey() + " " +  (numberOfShips-i));
                     Ships battleship = new Ships(set.getKey(), new Random().nextInt(2) == 1 ? 'V' : 'H');
-                    generatePlacement(matrix, battleship, matrixSize, symbols, scan, true);
+                    generatePlacement(matrix, battleship, matrixSize, symbols, new Scanner(System.in), true);
 
                 }
             }
@@ -331,7 +326,7 @@ public class Main {
         // Evaluate if placement makes the ships overlap, display message if Human Player(Player A) overlaps
         // If overlapping occur, call function generatePlacement again and get new coordinates/placement
         // If the placement is possible, update The Matrix
-        if(!tryPossiblePlacement(matrix, symbols.fill, coordinates)){
+        if(!tryPossiblePlacement(matrix, symbols, coordinates)){
             if(!auto) {
                 System.out.println("Overlapping ships! Try again mister");
             }
@@ -353,17 +348,17 @@ public class Main {
 
     // Function for evaluating possible placement, loops through the matrix and if any slots is occupied with something other than fill(water)
     // it will return false
-    private static boolean tryPossiblePlacement(String[][] matrix, String fill, Coordinates coordinates) {
+    private static boolean tryPossiblePlacement(String[][] matrix, FieldSymbols symbols, Coordinates coordinates) {
         int collisionCounter = 0;
 
         for(int i = 0; i < coordinates.getLength(); i++) {
             if(coordinates.getDirection() == 'V'){
-                if(!Objects.equals(matrix[coordinates.getRow() + i][coordinates.getCol()], fill)){
+                if(!Objects.equals(matrix[coordinates.getRow() + i][coordinates.getCol()], symbols.fill)){
                     collisionCounter += 1;
                 }
             }
             else {
-                if(!Objects.equals(matrix[coordinates.getRow()][coordinates.getCol()+i], fill)){
+                if(!Objects.equals(matrix[coordinates.getRow()][coordinates.getCol()+i], symbols.fill)){
                     collisionCounter += 1;
                 }
             }
